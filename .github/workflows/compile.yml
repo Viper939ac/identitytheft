@@ -5,8 +5,7 @@ on:
     branches:
       - main
   release:
-    types: [created] branches:
-      - main
+    types: [created]
 
 jobs:
   build:
@@ -26,4 +25,26 @@ jobs:
       run: cmake -S . -B build
 
     - name: Build
+    - name: Build
       run: cmake --build build
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/your_compiled_file
+        asset_name: your_compiled_file
+        asset_content_type: application/octet-stream
