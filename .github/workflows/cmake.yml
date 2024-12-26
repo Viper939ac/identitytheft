@@ -74,4 +74,4 @@ jobs:
           git commit -m "Add compiled binaries"
           git push origin release --force
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
