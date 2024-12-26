@@ -69,3 +69,4 @@ jobs:
         asset_name: ${{ matrix.os }}-binaries
         asset_content_type: application/zip
 
+
