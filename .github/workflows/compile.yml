@@ -21,7 +21,7 @@ jobs:
     - name: Set up CMake
       uses: lukka/get-cmake@latest
 
-    - name: Configure CMake
+    - name: Configure CMake1
       run: cmake -S . -B build
 
     - name: Build
