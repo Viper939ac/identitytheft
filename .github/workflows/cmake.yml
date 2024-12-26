@@ -25,46 +25,19 @@ jobs:
     - name: Build
       run: cmake --build build --config Release
 
+    - name: Save build logs
+      run: |
+        # Store logs of the build process into a log file
+        cmake --build build --config Release > build_output_${{ matrix.os }}.log || true
+
+    - name: Archive build logs as artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}-build-logs
+        path: build_output_${{ matrix.os }}.log
+
     - name: Archive build artifacts
       uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.os }}-build
         path: build/
-
-  create-release:
-      runs-on: ubuntu-latest
-
-      steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Set up Git configuration
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Create and push a new tag
-        run: |
-          # Define the tag version. You can dynamically generate this if necessary (e.g., using the current date or commit hash)
-          TAG_NAME="v1.0.0"  # You can update this version number accordingly
-        
-          # Create the tag locally
-          git tag $TAG_NAME
-        
-          # Push the tag to the remote repository
-          git push origin $TAG_NAME
-
-      - name: Create GitHub Release
-        run: |
-          TAG_NAME="v1.0.0"  # Ensure this is the same tag you pushed above
-        
-          # Create the GitHub Release using the GitHub API
-          curl -XPOST https://api.github.com/repos/${{ github.repository }}/releases \
-          -H "Authorization: token ${{ secrets.PAT }}" \
-          -d '{
-            "tag_name": "'"$TAG_NAME"'",
-            "name": "'"$TAG_NAME"' Release",
-            "body": "Release notes for '"$TAG_NAME"'",
-            "draft": false,
-            "prerelease": false
-          }'
