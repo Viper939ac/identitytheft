@@ -60,7 +60,8 @@ jobs:
 
       - name: Checkout release branch (or create if it doesn't exist)
         run: |
-          git fetch origin release || git checkout -b release origin/release
+          git fetch origin release
+          git checkout release
 
       - name: Commit and push binaries
         run: |
