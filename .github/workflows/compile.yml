@@ -1,50 +1,24 @@
 name: CMake Build
 
-on:
-  push:
-    branches:
-      - main
-  release:
-    types: [created]
+on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: Build with CMake
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v2
 
     - name: Set up CMake
-      uses: jwlawson/actions-setup-cmake@v1
+      uses: lukka/get-cmake@v3
 
-    - name: Create build directory
-      run: mkdir build
-
-    - name: Run CMake
+    - name: Configure CMake
       run: cmake -S . -B build
 
     - name: Build
-    - name: Build
       run: cmake --build build
-
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./build/your_compiled_file
-        asset_name: your_compiled_file
-        asset_content_type: application/octet-stream
