@@ -1,0 +1,1 @@
+[![CMake Build and Release](https://github.com/viperpi5/identitytheft/actions/workflows/compile.yml/badge.svg)](https://github.com/viperpi5/identitytheft/actions/workflows/compile.yml)
