@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build:
@@ -17,12 +14,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
-    - name: Install CMake
-      uses: jwlawson/actions-setup-cmake@v1
-      with:
-        cmake-version: latest
+    - name: Set up CMake
+      uses: lukka/get-cmake@v3
 
     - name: Configure CMake
       run: cmake -S . -B build
@@ -30,67 +25,47 @@ jobs:
     - name: Build
       run: cmake --build build --config Release
 
-    - name: Archive binaries
-      if: success()
+    - name: Archive build artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.os }}-binaries
+        name: ${{ matrix.os }}-build
         path: build/
 
   release:
-    needs: build
     runs-on: ubuntu-latest
+    needs: build
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+      with:
+        ref: release
 
-    - name: Download binaries
+    - name: Download Linux build
       uses: actions/download-artifact@v3
       with:
-        name: ubuntu-latest-binaries
-        path: ./binaries/ubuntu
-    - uses: actions/download-artifact@v3
-      with:
-        name: macos-latest-binaries
-        path: ./binaries/macos
-    - uses: actions/download-artifact@v3
-      with:
-        name: windows-latest-binaries
-        path: ./binaries/windows
+        name: ubuntu-latest-build
+        path: linux-build
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Download macOS build
+      uses: actions/download-artifact@v3
       with:
-        tag_name: v${{ github.run_number }}
-        release_name: Release ${{ github.run_number }}
-        draft: false
-        prerelease: false
+        name: macos-latest-build
+        path: macos-build
 
-    - name: Upload Release Assets
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Download Windows build
+      uses: actions/download-artifact@v3
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./binaries/ubuntu
-        asset_name: ubuntu-binaries
-        asset_content_type: application/zip
-    - uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./binaries/macos
-        asset_name: macos-binaries
-        asset_content_type: application/zip
-    - uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./binaries/windows
-        asset_name: windows-binaries
-        asset_content_type: application/zip
+        name: windows-latest-build
+        path: windows-build
+
+    - name: Commit and push binaries
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git checkout -b release
+        cp -r linux-build/* .
+        cp -r macos-build/* .
+        cp -r windows-build/* .
+        git add .
+        git commit -m "Add compiled binaries"
+        git push origin release --force
