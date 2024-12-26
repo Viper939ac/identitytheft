@@ -1,4 +1,4 @@
-name: CMake Build and Release 1
+name: CMake Build and Release
 
 on:
   push:
